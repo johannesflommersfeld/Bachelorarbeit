@@ -36,10 +36,8 @@ class Network(object):
                         for x, y in zip(sizes[:-1], sizes[1:])]
 	self.vs = [np.random.randn(y, x+1)
                         for x, y in zip(sizes[:-1], sizes[1:])]
-	i=0
-	while(i < (self.num_layers-1)):	
+	for i in xrange(0,self.num_layers-1)):	
 		self.vs[i] = np.hstack((weights[i],biases[i]))
-		i+=1 
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
