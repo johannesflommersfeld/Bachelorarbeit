@@ -12,6 +12,9 @@ and omits many desirable features.
 #### Libraries
 # Standard library
 import random
+import time
+import datetime
+import os
 
 # Third-party libraries
 import numpy as np
@@ -56,6 +59,7 @@ class Network(object):
         tracking progress, but slows things down substantially."""
         if test_data: n_test = len(test_data)
         n = len(training_data)
+        results = []
         for j in xrange(epochs):
             random.shuffle(training_data)
             mini_batches = [
@@ -64,10 +68,24 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, dt, t1, lmbda, len(training_data))
             if test_data:
-                print "Epoch {0}: {1} / {2}, Training data: {3}/{4}".format(
-                    j, self.evaluate(test_data), n_test, self.evaluateTraining(training_data), n)
+                results.append([j, self.evaluate(test_data), self.evaluateTraining(training_data)])
+                print "Epoch {0} compete".format(j)
             else:
+                results.append([j,0,0])
                 print "Epoch {0} complete".format(j)
+            
+        timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
+        f = open(os.path.join("results","results_{0}_lmbd{1}".format(timestamp, lmbda))+".txt","w")
+        f.write("Training of a neural net of the form {0}.  \n".format(self.sizes))
+        f.write("Size of the mini batches is: {0} \n".format(mini_batch_size))
+        f.write("Regularisation Parameter is: {0} \n".format(lmbda))
+        f.write("Solved via heuns method with dt = {0} and tmax = {1} \n".format(dt, t1))
+        for result in results:
+            if test_data:
+                f.write("Epoch {0}: Test data: {1} / {2}, Training data: {3}/{4} \n".format(result[0], result[1], n_test, result[2],n))
+            else:
+                f.write("Epoch {0} complete \n".format(result[0]))
+        f.close()
 
     def update_mini_batch(self, mini_batch, dt, t1,lmbda,n):
         """Update the network's weights and biases by applying
@@ -110,7 +128,7 @@ class Network(object):
         # backward pass
         delta = self.cost_derivative(np.delete(activations[-1],-1, 0), y) * \
             sigmoid_prime(zs[-1])
-        nabla_v[-1] = np.dot(delta, activations[-2].transpose()) - lmbda/n*self.vs[-1]
+        nabla_v[-1] = np.dot(delta, activations[-2].transpose()) + lmbda/n*self.vs[-1]
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
         # l = 1 means the last layer of neurons, l = 2 is the
@@ -121,7 +139,7 @@ class Network(object):
             z = zs[-l]
             sp = sigmoid_prime(z)
             delta = np.dot(np.delete(vs[-l+1].transpose(), -1, 0), delta) * sp
-            nabla_v[-l] = np.dot(delta, activations[-l-1].transpose()) - lmbda/n*self.vs[-l]
+            nabla_v[-l] = np.dot(delta, activations[-l-1].transpose()) + lmbda/n*self.vs[-l]
         return nabla_v
 
     def evaluate(self, test_data):
