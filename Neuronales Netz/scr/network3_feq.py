@@ -92,6 +92,7 @@ class Network(object):
         self.layers = layers
         self.mini_batch_size = mini_batch_size
         self.params = [param for layer in self.layers for param in layer.params]
+        self.params_int = self.params
         self.x = T.matrix("x")
         self.y = T.ivector("y")
         init_layer = self.layers[0]
@@ -103,9 +104,9 @@ class Network(object):
         self.output = self.layers[-1].output
         self.output_dropout = self.layers[-1].output_dropout
 
-    def SGD(self, training_data, epochs, mini_batch_size, eta,
-            validation_data, test_data, lmbda=0.0):
-        """Train the network using mini-batch stochastic gradient descent."""
+    def FEM(self, training_data, epochs, mini_batch_size, dt,
+            validation_data, test_data, tmax = 1.0, lmbda=0.0):
+        """Train the network using mini-batch stochastic flow equation method."""
         training_x, training_y = training_data
         validation_x, validation_y = validation_data
         test_x, test_y = test_data
@@ -120,14 +121,25 @@ class Network(object):
         cost = self.layers[-1].cost(self)+\
                0.5*lmbda*l2_norm_squared/num_training_batches
         grads = T.grad(cost, self.params)
-        updates = [(param, param-eta*grad)
-                   for param, grad in zip(self.params, grads)]
+        grads_int = T.grad(cost, self.params_int)
+        predict = [(param_int, param-dt*grad)
+                   for param, param_int, grad in zip(self.params, self.params_int, grads)]
+        correct = [(param, param-dt/2.*(grad + grad_int))
+                   for param, grad, grad_int in zip(self.params, grads, grads_int)]
 
         # define functions to train a mini-batch, and to compute the
         # accuracy in validation and test mini-batches.
         i = T.lscalar() # mini-batch index
-        train_mb = theano.function(
-            [i], cost, updates=updates,
+        predict_mb = theano.function(
+            [i], cost, updates = predict,
+            givens={
+                self.x:
+                training_x[i*self.mini_batch_size: (i+1)*self.mini_batch_size],
+                self.y:
+                training_y[i*self.mini_batch_size: (i+1)*self.mini_batch_size]
+            })
+        correct_mb = theano.function(
+            [i], cost, updates=correct,
             givens={
                 self.x:
                 training_x[i*self.mini_batch_size: (i+1)*self.mini_batch_size],
@@ -163,7 +175,10 @@ class Network(object):
                 iteration = num_training_batches*epoch+minibatch_index
                 if iteration % 1000 == 0:
                     print("Training mini-batch number {0}".format(iteration))
-                cost_ij = train_mb(minibatch_index)
+                for t in np.arange(0,tmax,dt):
+                    cost_int_ij = predict_mb(minibatch_index)
+                    cost_ij = correct_mb(minibatch_index)
+                    
                 if (iteration+1) % num_training_batches == 0:
                     validation_accuracy = np.mean(
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
@@ -230,8 +245,8 @@ class ConvPoolLayer(object):
         conv_out = conv.conv2d(
             input=self.inpt, filters=self.w, filter_shape=self.filter_shape,
             image_shape=self.image_shape)
-        pooled_out = pool.max_pool_2d(
-            input=conv_out, ds=self.poolsize, ignore_border=True)
+        pooled_out = pool.pool_2d(
+            input=conv_out, ws=self.poolsize, ignore_border=True)
         self.output = self.activation_fn(
             pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
         self.output_dropout = self.output # no dropout in the convolutional layers
@@ -300,7 +315,6 @@ class SoftmaxLayer(object):
     def accuracy(self, y):
         "Return the accuracy for the mini-batch."
         return T.mean(T.eq(y, self.y_out))
-
 
 #### Miscellanea
 def size(data):

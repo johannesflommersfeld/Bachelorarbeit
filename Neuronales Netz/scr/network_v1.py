@@ -69,7 +69,7 @@ class Network(object):
                 self.update_mini_batch(mini_batch, dt, t1, lmbda, len(training_data))
             if test_data:
                 results.append([j, self.evaluate(test_data), self.evaluateTraining(training_data)])
-                print "Epoch {0} compete".format(j)
+                print "Epoch {0} complete".format(j)
             else:
                 results.append([j,0,0])
                 print "Epoch {0} complete".format(j)
