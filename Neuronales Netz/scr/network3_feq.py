@@ -131,7 +131,7 @@ class Network(object):
         # accuracy in validation and test mini-batches.
         i = T.lscalar() # mini-batch index
         predict_mb = theano.function(
-            [i], cost, updates = predict,
+            [i], updates = predict,
             givens={
                 self.x:
                 training_x[i*self.mini_batch_size: (i+1)*self.mini_batch_size],
@@ -139,7 +139,7 @@ class Network(object):
                 training_y[i*self.mini_batch_size: (i+1)*self.mini_batch_size]
             })
         correct_mb = theano.function(
-            [i], cost, updates=correct,
+            [i], updates=correct,
             givens={
                 self.x:
                 training_x[i*self.mini_batch_size: (i+1)*self.mini_batch_size],
@@ -176,9 +176,9 @@ class Network(object):
                 if iteration % 1000 == 0:
                     print("Training mini-batch number {0}".format(iteration))
                 for t in np.arange(0,tmax,dt):
-                    cost_int_ij = predict_mb(minibatch_index)
-                    cost_ij = correct_mb(minibatch_index)
-                    
+                    predict_mb(minibatch_index)
+                    correct_mb(minibatch_index)
+                
                 if (iteration+1) % num_training_batches == 0:
                     validation_accuracy = np.mean(
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
@@ -312,6 +312,41 @@ class SoftmaxLayer(object):
         "Return the log-likelihood cost."
         return -T.mean(T.log(self.output_dropout)[T.arange(net.y.shape[0]), net.y])
 
+    def accuracy(self, y):
+        "Return the accuracy for the mini-batch."
+        return T.mean(T.eq(y, self.y_out))
+
+class SigmoidLayer(object):
+    
+    def __init__(self, n_in, n_out, p_dropout=0.0):
+        self.n_in = n_in
+        self.n_out = n_out
+        self.p_dropout = p_dropout
+        # Initialize weights and biases
+        self.w = theano.shared(
+            np.asarray(
+                np.random.normal(
+                    loc=0.0, scale=np.sqrt(1.0/n_out), size=(n_in, n_out)),
+                dtype=theano.config.floatX),
+            name='w', borrow=True)
+        self.b = theano.shared(
+            np.asarray(np.random.normal(loc=0.0, scale=1.0, size=(n_out,)),
+                dtype=theano.config.floatX),
+            name='b', borrow=True)
+        self.params = [self.w, self.b]
+
+    def set_inpt(self, inpt, inpt_dropout, mini_batch_size):
+        self.inpt = inpt.reshape((mini_batch_size, self.n_in))
+        self.output = sigmoid((1-self.p_dropout)*T.dot(self.inpt, self.w) + self.b)
+        self.y_out = T.argmax(self.output, axis=1)
+        self.inpt_dropout = dropout_layer(
+                                          inpt_dropout.reshape((mini_batch_size, self.n_in)), self.p_dropout)
+        self.output_dropout = sigmoid(T.dot(self.inpt_dropout, self.w) + self.b)
+
+    def cost(self, net):
+        "Return the quadratic cost."
+        return 0.5*T.mean(T.sqr(net.y - self.output_dropout))
+    
     def accuracy(self, y):
         "Return the accuracy for the mini-batch."
         return T.mean(T.eq(y, self.y_out))

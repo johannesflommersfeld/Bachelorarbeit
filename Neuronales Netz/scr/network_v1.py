@@ -48,7 +48,7 @@ class Network(object):
         return np.delete(a,-1,0)
 
     def SGD(self, training_data, epochs, mini_batch_size, dt, t1, lmbda = 0.0,
-            test_data=None):
+            test_data=None, validation_data=None):
         """Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
         ``(x, y)`` representing the training inputs and the desired
@@ -58,6 +58,7 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         if test_data: n_test = len(test_data)
+        if validation_data: n_valid = len(validation_data)
         n = len(training_data)
         results = []
         for j in xrange(epochs):
@@ -67,12 +68,15 @@ class Network(object):
                 for k in xrange(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, dt, t1, lmbda, len(training_data))
-            if test_data:
-                results.append([j, self.evaluate(test_data), self.evaluateTraining(training_data)])
-                print "Epoch {0} complete".format(j)
+            if test_data and validation_data:
+                results.append([j, self.evaluate(validation_data),self.evaluate(test_data), self.evaluateTraining(training_data)])
+            elif test_data:
+                results.append([j, 0,self.evaluate(test_data), self.evaluateTraining(training_data)])
+            elif validation_data:
+                results.append([j, self.evaluate(validation_data),0, self.evaluateTraining(training_data)])
             else:
-                results.append([j,0,0])
-                print "Epoch {0} complete".format(j)
+                results.append([j,0,0,self.evaluateTraining(training_data)])
+            print "Epoch {0} complete".format(j)
             
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
         f = open(os.path.join("results","results_{0}_lmbd{1}".format(timestamp, lmbda))+".txt","w")
@@ -81,10 +85,14 @@ class Network(object):
         f.write("Regularisation Parameter is: {0} \n".format(lmbda))
         f.write("Solved via heuns method with dt = {0} and tmax = {1} \n".format(dt, t1))
         for result in results:
-            if test_data:
-                f.write("Epoch {0}: Test data: {1} / {2}, Training data: {3}/{4} \n".format(result[0], result[1], n_test, result[2],n))
+            if test_data and validation_data:
+                f.write("Epoch {0}: Validation data: {1:.2%}, Test data: {2:.2%}, Training data: {3:.2%} \n".format(result[0], float(result[1])/n_valid, float(result[2])/n_test ,float(result[3])/n))
+            elif test_data :
+                f.write("Epoch {0}: Test data: {2:.2%}, Training data: {3:.2%} \n".format(result[0], float(result[2])/n_test ,float(result[3])/n))
+            elif validation_data:
+                f.write("Epoch {0}: Validation data: {1:.2%}, Training data: {2:.2%} \n".format(result[0], float(result[1])/n_valid, float(result[3])/n))
             else:
-                f.write("Epoch {0} complete \n".format(result[0]))
+                f.write("Epoch {0} complete: Training data: {1:.2%} \n".format(result[0], float(result[3])/n))
         f.close()
 
     def update_mini_batch(self, mini_batch, dt, t1,lmbda,n):
