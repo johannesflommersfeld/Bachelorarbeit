@@ -1,5 +1,8 @@
 #### Libraries
 import numpy as np
+import time
+import datetime
+import os
 #### Modules
 import spinglass
 
@@ -59,24 +62,37 @@ def heun(sg, f_start, t0, t1, dt):
 				f_final[n] = 0.0001	
 			n +=1
 		t += dt
-		#print("t = %g, E = %g" % (t, sg.E(f_final)))
 	return f_final
 
 #searching ground states of spin glasses
 	
 E = np.empty(500)
 i=0
+results = []
 while(i < 100):
-	sg = spinglass.Spinglass(dim_lattice, hx, hz)
-	n = 0
-	while(n < 5):	
-		f = np.ones(dim_lattice**2)*0.45 + 0.1*np.random.uniform(0,0,dim_lattice**2)
-		count = 0
-		while(np.linalg.norm(sg.dE(f)) > 0.1 and count < 20):	
-			f = heun(sg,f, t0, t1, dt)
-			count+=1
-		E[i*5+n] = sg.E(f)
-		n+=1
-	print("Instance %g, E/N = %g" % (i+1, np.amin(E[i*5:(i*5 + 5)])/dim_lattice**2))
-	i +=1
-print("Minimal Energy of all 100 Instances: E/N = %g" %(np.amin(E)/dim_lattice**2))
+    sg = spinglass.Spinglass(dim_lattice, hx, hz)
+    n = 0
+    while(n < 10):
+        f = np.ones(dim_lattice**2)*0.45 + 0.1*np.random.uniform(0,1,dim_lattice**2)
+        count = 0
+        while(np.linalg.norm(sg.dE(f)) > 0.1 and count < 20):
+            f = heun(sg,f, t0, t1, dt)
+            count+=1
+        E[i*5+n] = sg.E(f)
+        n+=1
+    results.append([i+1,np.amin(E[i*5:(i*5 + 5)])])
+    print("Instance {0} finished".format(i+1))
+    i +=1
+EN = [result[1]/dim_lattice**2 for result in results]
+print("Minimal Energy of all 100 Instances: E/N = %g" %(np.amin(EN)))
+print("Mean Energy: <E>/N = {0}, standard deviation sqrt(Var(E))/N = {1}".format(np.mean(EN), np.std(EN)))
+timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
+f = open(os.path.join("results","results_{0}".format(timestamp))+".txt","w")
+f.write("Searching for ground states on a {0}x{0} lattice, \n".format(dim_lattice))
+f.write("using the flow equation method, without the hessian.\n")
+f.write("External fields are: hx = {0}, hz = {1}\n".format(hx,hz))
+for result in results:
+    f.write("Instance {0}: E/N = {1} \n".format(result[0], result[1]/dim_lattice**2))
+f.write("Minimal Energy of all 100 Instances: E/N = {0}\n".format(np.amin(EN)))
+f.write("Mean Energy: <E>/N = {0}, standard deviation sqrt(Var(E))/N = {1}\n".format(np.mean(EN), np.std(EN)))
+f.close()

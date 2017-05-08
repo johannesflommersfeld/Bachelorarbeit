@@ -31,7 +31,7 @@ class Spinglass(object):
 			m[2] = (n + 1)%(self.dim**2)
 			m[3] = (n + self.dim)%(self.dim**2)
 			for j in m:					
-				out[n] += 2*self.J[n,j]*(2*f[j] + 1)
+				out[n] += 2*self.J[n,j]*(2*f[j] - 1)
 			out[n] += -2*self.hz - self.hx*(1-2*f[n])/np.sqrt(f[n]*(1-f[n]))
 			n +=1
 		return out
@@ -43,7 +43,7 @@ class Spinglass(object):
 		l = 0
 		while n < self.dim**2:
 			while l < self.dim**2:
-				out[l,n] = 4*self.J[l,n]*(DiracDelta(l,n+1) + DiracDelta(l,n-1) + DiracDelta(l,n+self.dim) + DiracDelta(l, n-self.dim)) + DiracDelta(l,n)*self.hx*(2/(np.sqrt(f[n]*(1-f[n]))) + 0.5*(1-2*f[n])**2/(f[n]*(1-f[n]))**(3./2.))
+				out[l,n] = 4*self.J[l,n]*(DiracDelta(l,n+1) + DiracDelta(l,n-1) + DiracDelta(l,n+self.dim) + DiracDelta(l, n-self.dim)) + DiracDelta(l,n)*self.hx/(2*(f[n]*(1-f[n]))**(3./2.))
 				l += 1
 			n += 1
 		return out
@@ -52,7 +52,7 @@ class Spinglass(object):
 	def d_td_md_nE(self,f,A):
 		n = 0
 		df = A.dot(self.dE(f))
-		vec = -self.hx*0.75*(np.ones(self.dim**2) - 2*f)**3*df/(f*(1-f))**(5./2.)
+		vec = -self.hx*0.75*(np.ones(self.dim**2) - 2*f)*df/(f*(1-f))**(5./2.)
 		return np.eye(self.dim**2)*vec
 
 	#create coupling between nearest neighbours with periodic boundary conditions
