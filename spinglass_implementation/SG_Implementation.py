@@ -67,21 +67,22 @@ def heun(sg, f_start, t0, t1, dt):
 	return f_final
 
 #searching ground states of spin glasses	
-E = np.empty(500)
 i=0
 results = []
-while(i < 100):
+i_max, n_max = 100, 10
+E = np.zeros(i_max*n_max)
+while(i < i_max):
     sg = spinglass.Spinglass(dim_lattice, hx, hz)
     n = 0
-    while(n < 10):
+    while(n < n_max):
         f = np.ones(dim_lattice**2)*0.45 + 0.1*np.random.uniform(0,1,dim_lattice**2)
         count = 0
         while(np.linalg.norm(sg.dE(f)) > 0.1 and count < 20):
             f = heun(sg,f, t0, t1, dt)
             count+=1
-        E[i*5+n] = sg.E(f)
+        E[i*n_max+n] = sg.E(f)
         n+=1
-    results.append([i+1,np.amin(E[i*5:(i*5 + 5)])])
+    results.append([i+1,np.amin(E[i*n_max:(i*n_max + n_max)])])
     print("Instance {0} finished".format(i+1))
     i +=1
 EN = [result[1]/dim_lattice**2 for result in results]
