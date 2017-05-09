@@ -34,6 +34,10 @@ versions of Theano.
 # Standard library
 import cPickle
 import gzip
+import os
+import time
+import datetime
+
 
 # Third-party libraries
 import numpy as np
@@ -169,12 +173,17 @@ class Network(object):
                 test_x[i*self.mini_batch_size: (i+1)*self.mini_batch_size]
             })
         # Do the actual training
+        timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
+        f = open(os.path.join("results","results_{0}".format(timestamp))+".txt",'w')
+        f.write("Train neural network of the shape {0} with the flow equation method.\n".format([layer.name for layer in self.layers]))
+        f.write("We use a mini batch size of {0}, a stepsize of dt = {1} with a maximum value for t_max = {2}, additionally we use l2 regularization with lambda = {3}.\n".format(mini_batch_size, dt, tmax, lmbda))
         best_validation_accuracy = 0.0
         for epoch in xrange(epochs):
             for minibatch_index in xrange(num_training_batches):
                 iteration = num_training_batches*epoch+minibatch_index
                 if iteration % 1000 == 0:
                     print("Training mini-batch number {0}".format(iteration))
+                    f.write("Training mini-batch number {0}\n".format(iteration))
                 for t in np.arange(0,tmax,dt):
                     predict_mb(minibatch_index)
                     correct_mb(minibatch_index)
@@ -182,21 +191,24 @@ class Network(object):
                 if (iteration+1) % num_training_batches == 0:
                     validation_accuracy = np.mean(
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
-                    print("Epoch {0}: validation accuracy {1:.2%}".format(
-                        epoch, validation_accuracy))
+                    print("Epoch {0} finished".format(epoch))
+                    f.write("Epoch {0}: validation accuracy {1:.2%}\n".format(epoch, validation_accuracy))
+
                     if validation_accuracy >= best_validation_accuracy:
-                        print("This is the best validation accuracy to date.")
+                        f.write("This is the best validation accuracy to date.\n")
                         best_validation_accuracy = validation_accuracy
                         best_iteration = iteration
                         if test_data:
                             test_accuracy = np.mean(
                                 [test_mb_accuracy(j) for j in xrange(num_test_batches)])
-                            print('The corresponding test accuracy is {0:.2%}'.format(
-                                test_accuracy))
+                            f.write("The corresponding test accuracy is {0:.2%}\n".format(test_accuracy))
         print("Finished training network.")
-        print("Best validation accuracy of {0:.2%} obtained at iteration {1}".format(
-            best_validation_accuracy, best_iteration))
+        print("Best validation accuracy of {0:.2%} obtained at iteration {1}".format(best_validation_accuracy, best_iteration))
         print("Corresponding test accuracy of {0:.2%}".format(test_accuracy))
+        f.write("Finished training network.\n")
+        f.write("Best validation accuracy of {0:.2%} obtained at iteration {1}\n".format(best_validation_accuracy, best_iteration))
+        f.write("Corresponding test accuracy of {0:.2%}\n".format(test_accuracy))
+        f.close()
 
 #### Define layer types
 
@@ -222,6 +234,7 @@ class ConvPoolLayer(object):
         x pooling sizes.
 
         """
+        self.name = 'ConvPoolLayer with filter shape {0} and poolsize {1}'.format(filter_shape, poolsize)
         self.filter_shape = filter_shape
         self.image_shape = image_shape
         self.poolsize = poolsize
@@ -254,6 +267,7 @@ class ConvPoolLayer(object):
 class FullyConnectedLayer(object):
 
     def __init__(self, n_in, n_out, activation_fn=sigmoid, p_dropout=0.0):
+        self.name = 'FullyConnectedLayer with n_in = {0}, n_out = {1} and p_dropout = {2}'.format(n_in, n_out, p_dropout)
         self.n_in = n_in
         self.n_out = n_out
         self.activation_fn = activation_fn
@@ -288,6 +302,7 @@ class FullyConnectedLayer(object):
 class SoftmaxLayer(object):
 
     def __init__(self, n_in, n_out, p_dropout=0.0):
+        self.name='SoftmaxLayer with n_in = {0}, n_out = {1} and p_dropout = {2}'.format(n_in, n_out, p_dropout)
         self.n_in = n_in
         self.n_out = n_out
         self.p_dropout = p_dropout
@@ -319,6 +334,7 @@ class SoftmaxLayer(object):
 class SigmoidLayer(object):
     
     def __init__(self, n_in, n_out, p_dropout=0.0):
+        self.name = 'SigmoidLayer ith n_in = {0}, n_out = {1} and p_dropout = {2}'.format(n_in, n_out, p_dropout)
         self.n_in = n_in
         self.n_out = n_out
         self.p_dropout = p_dropout
