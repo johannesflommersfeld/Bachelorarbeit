@@ -176,7 +176,7 @@ class Network(object):
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
         f = open(os.path.join("results","results_{0}".format(timestamp))+".txt",'w')
         f.write("Train neural network of the shape {0} with the flow equation method.\n".format([layer.name for layer in self.layers]))
-        f.write("We use a mini batch size of {0}, a stepsize of dt = {1} with a maximum value for t_max = {2}, additionally we use l2 regularization with lambda = {3}.\n".format(mini_batch_size, dt, tmax, lmbda))
+        f.write("We use a mini batch size of {0}, a stepsize of dt = {1} with a maximum value of t_max = {2}, additionally we use l2 regularization with lambda = {3}.\n".format(mini_batch_size, dt, tmax, lmbda))
         best_validation_accuracy = 0.0
         for epoch in xrange(epochs):
             for minibatch_index in xrange(num_training_batches):
