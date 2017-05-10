@@ -174,7 +174,7 @@ class Network(object):
             })
         # Do the actual training
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
-        f = open(os.path.join("results","results_{0}".format(timestamp))+".txt",'w')
+        f = open(os.path.join("results","results_fem_{0}".format(timestamp))+".txt",'w')
         f.write("Train neural network of the shape {0} with the flow equation method.\n".format([layer.name for layer in self.layers]))
         f.write("We use a mini batch size of {0}, a stepsize of dt = {1} with a maximum value of t_max = {2}, additionally we use l2 regularization with lambda = {3}.\n".format(mini_batch_size, dt, tmax, lmbda))
         best_validation_accuracy = 0.0
@@ -183,7 +183,6 @@ class Network(object):
                 iteration = num_training_batches*epoch+minibatch_index
                 if iteration % 1000 == 0:
                     print("Training mini-batch number {0}".format(iteration))
-                    f.write("Training mini-batch number {0}\n".format(iteration))
                 for t in np.arange(0,tmax,dt):
                     predict_mb(minibatch_index)
                     correct_mb(minibatch_index)
@@ -193,7 +192,6 @@ class Network(object):
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
                     print("Epoch {0} finished".format(epoch))
                     f.write("Epoch {0}: validation accuracy {1:.2%}\n".format(epoch, validation_accuracy))
-
                     if validation_accuracy >= best_validation_accuracy:
                         f.write("This is the best validation accuracy to date.\n")
                         best_validation_accuracy = validation_accuracy

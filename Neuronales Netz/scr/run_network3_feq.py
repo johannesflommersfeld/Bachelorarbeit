@@ -12,6 +12,8 @@ parser.add_argument("-ofc", "--onefullyconected", action="store_true", dest = "o
 parser.add_argument("-tfc", "--twofullyconected", action="store_true", dest = "twofullyconected", help="Use neural net with two fully connected layers.")
 parser.add_argument("-c", "--convolutional", action="store_true", dest = "convolutional", help="Use simple convolutional net.")
 parser.add_argument("-cfc", "--convolutionalfullyconnected", action="store_true", dest = "convolutionalfullyconnected", help="Use convolutional net with extra fully connected layer.")
+parser.add_argument("-ctfc", "--convolutionaltwofullyconnected", action="store_true", dest = "convolutionaltwofullyconnected", help="Use convolutional net with two extra fully connected layer.")
+parser.add_argument("-tcfc", "--twoconvolutionalfullyconnected", action="store_true", dest = "twoconvolutionalfullyconnected", help="Use two convolutional layers with an extra fully connected layer.")
 args = parser.parse_args()
 
 mini_batch_size = 10
@@ -44,6 +46,28 @@ elif(args.convolutionalfullyconnected):
                                  filter_shape=(20, 1, 5, 5),
                                  poolsize=(2, 2)),
                    FullyConnectedLayer(n_in=20*12*12, n_out=100, p_dropout=0.5),
+                   SoftmaxLayer(n_in=100, n_out=10, p_dropout=0.5)
+                   ], mini_batch_size)
+elif(args.convolutionaltwofullyconnected):
+    #ConvNet with extra fully connected layer
+    net = Network([
+                   ConvPoolLayer(image_shape=(mini_batch_size, 1, 28, 28),
+                                 filter_shape=(20, 1, 5, 5),
+                                 poolsize=(2, 2)),
+                   FullyConnectedLayer(n_in=20*12*12, n_out=100, p_dropout=0.5),
+                   FullyConnectedLayer(n_in=100, n_out=100, p_dropout=0.5),
+                   SoftmaxLayer(n_in=100, n_out=10, p_dropout=0.5)
+                   ], mini_batch_size)
+elif(args.twoconvolutionalfullyconnected):
+    #ConvNet with extra fully connected layer
+    net = Network([
+                   ConvPoolLayer(image_shape=(mini_batch_size, 1, 28, 28),
+                                 filter_shape=(20, 1, 5, 5),
+                                 poolsize=(2, 2)),
+                   ConvPoolLayer(image_shape=(mini_batch_size, 20, 12, 12),
+                                 filter_shape=(40, 20, 5, 5),
+                                 poolsize=(2, 2)),
+                   FullyConnectedLayer(n_in=40*4*4, n_out=100),
                    SoftmaxLayer(n_in=100, n_out=10, p_dropout=0.5)
                    ], mini_batch_size)
 else:
