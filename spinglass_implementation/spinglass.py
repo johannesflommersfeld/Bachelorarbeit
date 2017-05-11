@@ -41,7 +41,7 @@ class Spinglass(object):
 		l = 0
 		for n in xrange(0, self.dim**2):
 			for l in xrange(0, self.dim**2):
-				out[l,n] = 4*self.J[l,n]*(DiracDelta(l,n+1) + DiracDelta(l,n-1) + DiracDelta(l,n+self.dim) + DiracDelta(l, n-self.dim)) + DiracDelta(l,n)*self.hx/(2*(f[n]*(1-f[n]))**(3./2.))
+				out[l,n] = 4*self.J[l,n]*(DiracDelta(l,(n + 1)%(self.dim**2)) + DiracDelta(l,(n - 1)%(self.dim**2)) + DiracDelta(l,(n + self.dim)%(self.dim**2)) + DiracDelta(l, (n - self.dim)%(self.dim**2))) + DiracDelta(l,n)*self.hx/(2*(f[n]*(1-f[n]))**(3./2.))
 		return out
 
 	#time derivative of the second order derivative of the energy

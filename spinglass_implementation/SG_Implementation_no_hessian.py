@@ -39,8 +39,8 @@ def heun(sg, f_start, t0, t1, dt):
 		elif dt > 0.1:
 			dt = 0.1
 
-        #make sure that f_int stays in the interval (0,1) to avoid divergencies
-        for n in xrange(0, sg.dim**2):
+		#make sure that f_int stays in the interval (0,1) to avoid divergencies
+		for n in xrange(0, sg.dim**2):
 			if(f1[n] < 1 and  f1[n] > 0):
 				f_int[n] = f1[n]
 			elif(f1[n] > 1):
@@ -51,8 +51,8 @@ def heun(sg, f_start, t0, t1, dt):
 		#corrector step
 		df_int = df(sg,f_int)
 		f = f_final + dt/2.*(df_final + df_int)
-        #make sure that f_final stays in the interval (0,1) to avoid divergencies
-        for n in xrange(0, sg.dim**2):
+		#make sure that f_final stays in the interval (0,1) to avoid divergencies
+		for n in xrange(0, sg.dim**2):
 			if(f[n] < 1 and  f[n] > 0):
 				f_final[n] = f[n]
 			elif(f[n] >= 1):

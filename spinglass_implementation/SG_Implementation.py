@@ -41,7 +41,7 @@ def heun(sg, f_start, t0, t1, dt):
 		elif dt > 0.1:
 			dt = 0.1
         
-        #make sure that f_int stays in the interval (0,1) to avoid divergencies
+		#make sure that f_int stays in the interval (0,1) to avoid divergencies
 		for n in xrange(0, sg.dim**2):
 			if(f1[n] < 1 and  f1[n] > 0):
 				f_int[n] = f1[n]
@@ -53,20 +53,20 @@ def heun(sg, f_start, t0, t1, dt):
 		#corrector step
 		df_int = df(sg,f_int,t+dt)
 		f = f_final + dt/2*(df_final + df_int)
-        #make sure that f_final stays in the interval (0,1) to avoid divergencies
-        for n in xrange(0, sg.dim**2):
+ 	       #make sure that f_final stays in the interval (0,1) to avoid divergencies
+		for n in xrange(0, sg.dim**2):
 			if(f[n] < 1 and  f[n] > 0):
 				f_final[n] = f[n]
 			elif(f[n] >= 1):
 				f_final[n] = 0.9999
 			elif(f[n] <= 0):
-				f_final[n] = 0.0001	
+				f_final[n] = 0.0001
 		t += dt
 	return f_final
 
 #searching ground states of spin glasses	
 results = []
-i_max, n_max = 100, 10
+i_max, n_max = 10, 10
 E = np.zeros(i_max*n_max)
 for i in xrange(0, i_max):
     sg = spinglass.Spinglass(dim_lattice, hx, hz)
@@ -82,7 +82,7 @@ for i in xrange(0, i_max):
 EN = [result[1]/dim_lattice**2 for result in results]
 
 #printing the results
-print("Minimal Energy of all 100 Instances: E/N = %g" %(np.amin(EN)))
+print("Minimal Energy of all {0} Instances: E/N = {1}".fromat(i_max, np.amin(EN)))
 print("Mean Energy: <E>/N = {0}, standard deviation sqrt(Var(E))/N = {1}".format(np.mean(EN), np.std(EN)))
 timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
 f = open(os.path.join("results","results_{0}".format(timestamp))+".txt","w")

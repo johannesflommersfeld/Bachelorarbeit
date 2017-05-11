@@ -1,4 +1,5 @@
 results*
+!results/
 run_network3.py
 network3_feq_hessian.py
 run_network3_feq_hessian.py
