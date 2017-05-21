@@ -9,7 +9,7 @@ import spinglass
 t0, t1, dt = 0, 1., 0.001
 hx, hz = 0.05, 0.1
 dim_lattice = 5	
-tol = 10
+tol = 1
 
 #r.h.s of the ode 
 def df(sg,f):
@@ -64,7 +64,7 @@ def heun(sg, f_start, t0, t1, dt):
 
 #searching ground states of spin glasses
 results = []
-i_max, n_max = 100, 10
+i_max, n_max = 100, 5
 E = np.zeros(i_max*n_max)
 for i in xrange(0, i_max):
     sg = spinglass.Spinglass(dim_lattice, hx, hz)
@@ -85,7 +85,7 @@ print("Mean Energy: <E>/N = {0}, standard deviation sqrt(Var(E))/N = {1}".format
 timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
 f = open(os.path.join("results","results_{0}".format(timestamp))+".txt","w")
 f.write("Searching for ground states on a {0}x{0} lattice, \n".format(dim_lattice))
-f.write("using the flow equation method, without the hessian.\n")
+f.write("using the flow equation method, without the hessian and a stepsize of dt = {0}.\n".fromat(dt))
 f.write("External fields are: hx = {0}, hz = {1}\n".format(hx,hz))
 for result in results:
     f.write("Instance {0}: E/N = {1} \n".format(result[0], result[1]/dim_lattice**2))
