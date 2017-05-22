@@ -85,7 +85,7 @@ print("Mean Energy: <E>/N = {0}, standard deviation sqrt(Var(E))/N = {1}".format
 timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
 f = open(os.path.join("results","results_{0}".format(timestamp))+".txt","w")
 f.write("Searching for ground states on a {0}x{0} lattice, \n".format(dim_lattice))
-f.write("using the flow equation method, without the hessian and a stepsize of dt = {0}.\n".fromat(dt))
+f.write("using the flow equation method, without the hessian and a stepsize of dt = {0}.\n".format(dt))
 f.write("External fields are: hx = {0}, hz = {1}\n".format(hx,hz))
 for result in results:
     f.write("Instance {0}: E/N = {1} \n".format(result[0], result[1]/dim_lattice**2))
